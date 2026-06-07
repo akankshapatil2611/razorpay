@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: Razorpay
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/razorpayDB
+    username: root
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
