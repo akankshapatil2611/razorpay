@@ -2,5 +2,9 @@ package com.gayeway.Razorpay.common.enums;
 
 public enum BusinessType {
     LLP,
-    PROPRITROSHIP
+    PROPRIETORSHIP,
+    PARTNERSHIP,
+    PRIVATE_LIMITED,
+    PUBLIC_LIMITED,
+    TRUST
 }
