@@ -3,12 +3,17 @@ package com.gayeway.Razorpay.merchant.entity;
 import com.gayeway.Razorpay.common.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import lombok.Generated;
+import lombok.*;
 
 import java.util.UUID;
 
 @Entity
 @Table(name="app_user")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AppUser {
 
     @Id

@@ -1,8 +1,8 @@
 package com.gayeway.Razorpay.operations.entity;
 
+import com.gayeway.Razorpay.payment.entity.Payment;
 import jakarta.persistence.*;
 import lombok.*;
-
 
 @Entity
 @Table(name = "settlement_payment")
@@ -16,8 +16,13 @@ public class SettlementPayment {
     @EmbeddedId
     private SettlementPaymentId id;
 
-    @MapsId()                        // maps with primary key from settlement
+    @MapsId("settlementId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "settlement_id", nullable = false)
     private Settlement settlement;
+
+//    @MapsId("paymentId")
+//    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+//    @JoinColumn(name = "payment_id", nullable = false)
+//    private Payment payment;
 }
