@@ -1,5 +1,6 @@
 package com.gayeway.Razorpay.merchant.entity;
 
+import com.gayeway.Razorpay.common.entity.BaseEntity;
 import com.gayeway.Razorpay.common.enums.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -14,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AppUser {
+public class AppUser extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

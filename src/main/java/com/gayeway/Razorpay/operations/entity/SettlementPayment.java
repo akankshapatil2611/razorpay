@@ -1,5 +1,6 @@
 package com.gayeway.Razorpay.operations.entity;
 
+import com.gayeway.Razorpay.common.entity.BaseEntity;
 import com.gayeway.Razorpay.payment.entity.Payment;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,7 +12,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SettlementPayment {
+public class SettlementPayment extends BaseEntity {
 
     @EmbeddedId
     private SettlementPaymentId id;

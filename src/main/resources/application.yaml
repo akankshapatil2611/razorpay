@@ -1,3 +1,6 @@
+server:
+  port: 9090
+
 spring:
   application:
     name: Razorpay
@@ -11,3 +14,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+payment:
+  order:
+    default-order-expiry-minutes: 30

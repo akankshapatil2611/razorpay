@@ -1,4 +1,8 @@
 package com.gayeway.Razorpay.merchant.dto.request;
 
-public record CreateApiKeyRequest() {
+import com.gayeway.Razorpay.common.enums.Environment;
+
+public record CreateApiKeyRequest(
+        Environment environment
+) {
 }

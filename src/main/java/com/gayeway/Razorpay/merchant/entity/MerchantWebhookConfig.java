@@ -1,5 +1,6 @@
 package com.gayeway.Razorpay.merchant.entity;
 
+import com.gayeway.Razorpay.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,7 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MerchantWebhookConfig {          // merchant wantes to listen webhook from other
+public class MerchantWebhookConfig extends BaseEntity {          // merchant wantes to listen webhook from other
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

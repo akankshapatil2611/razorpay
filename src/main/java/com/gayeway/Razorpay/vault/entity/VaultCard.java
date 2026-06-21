@@ -1,5 +1,6 @@
 package com.gayeway.Razorpay.vault.entity;
 
+import com.gayeway.Razorpay.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -13,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class VaultCard {
+public class VaultCard extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

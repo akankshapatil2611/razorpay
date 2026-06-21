@@ -1,17 +1,26 @@
 package com.gayeway.Razorpay.payment.entity;
 
+import com.gayeway.Razorpay.common.entity.BaseEntity;
 import com.gayeway.Razorpay.common.enums.PaymentActor;
 import com.gayeway.Razorpay.common.enums.PaymentEvent;
 import com.gayeway.Razorpay.common.enums.PaymentStatus;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 // log all payment related activities
 @Entity
-@Table(name = "payment_transition_log")
-public class PaymentTrasitionLog {
+@Table(name = "payment_transition_log", indexes = {
+        @Index(name = "idx_payment_transition_log_payment_id", columnList = "payment_id")
+})
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class PaymentTrasitionLog extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
