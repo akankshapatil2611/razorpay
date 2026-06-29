@@ -15,4 +15,7 @@ public interface PaymentMapper {
     @Mapping(target = "orderId", source = "order.id")
     List<PaymentResponse> toResponseList(List<Payment> paymentList);
 
+    @Mapping(target = "orderId", source = "order.id")
+    PaymentResponse toResponse(Payment payment);
+
 }

@@ -1,0 +1,88 @@
+package com.gayeway.Razorpay.payment.service.impl;
+
+import com.gayeway.Razorpay.common.enums.OrderStatus;
+import com.gayeway.Razorpay.common.enums.PaymentStatus;
+import com.gayeway.Razorpay.common.exception.BusinessRuleViolation;
+import com.gayeway.Razorpay.common.exception.ResourceNotFoundException;
+import com.gayeway.Razorpay.payment.dto.request.PaymentInitRequest;
+import com.gayeway.Razorpay.payment.dto.response.PaymentResponse;
+import com.gayeway.Razorpay.payment.entity.OrderRecord;
+import com.gayeway.Razorpay.payment.entity.Payment;
+import com.gayeway.Razorpay.payment.gateway.PaymentGatewayRouter;
+import com.gayeway.Razorpay.payment.gateway.dto.PaymentRequest;
+import com.gayeway.Razorpay.payment.gateway.dto.PaymentResult;
+import com.gayeway.Razorpay.payment.mapper.PaymentMapper;
+import com.gayeway.Razorpay.payment.repository.OrderRepository;
+import com.gayeway.Razorpay.payment.repository.PaymentRepository;
+import com.gayeway.Razorpay.payment.service.PaymentService;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.atn.SemanticContext;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+
+import java.util.UUID;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class PaymentServiceImpl implements PaymentService {
+
+    private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
+    private final PaymentGatewayRouter router;
+    private final PaymentMapper paymentMapper;
+
+    @Transactional()
+    @Override
+    public PaymentResponse initiate(UUID merchantId, PaymentInitRequest request) {
+
+        OrderRecord order = orderRepository.findByIdAndMerchantId(request.orderId(), merchantId)
+                .orElseThrow(() -> new ResourceNotFoundException("order", request.orderId()));
+
+        if(order.getOrderstatus() != OrderStatus.CREATED && order.getOrderstatus() != OrderStatus.ATTEMPTED)
+        {
+            throw new BusinessRuleViolation("ORDER_NOT_PAYABLE",
+                    "Order cannot accept payment in status: "+order.getOrderstatus());
+        }
+
+        order.setOrderstatus(OrderStatus.ATTEMPTED);
+        order.setAttempts(order.getAttempts()+1);
+
+        Payment payment = Payment.builder()
+                .order(order)
+                .merchant_id(merchantId)
+                .money(order.getAmount())
+                .status(PaymentStatus.CREATED)
+                .method(request.paymentMethod())
+                .methodDetails(request.methodDetails())
+                .build();
+
+        payment = paymentRepository.save(payment);
+
+        PaymentRequest paymentRequest = new PaymentRequest(payment.getId(),
+                request.orderId(), merchantId,
+                order.getAmount(), request.paymentMethod(),
+                request.methodDetails());
+
+        PaymentResult result =  router.initiate(paymentRequest);
+
+        switch (result)
+        {
+            case PaymentResult.Pending pending -> payment.setProcessorReference(pending.registrationRef());
+            case PaymentResult.Failure failure -> {
+                payment.setStatus(PaymentStatus.FAILED);
+                payment.setErrorCode(failure.errorCode());
+                payment.setErrorDescription(failure.errorDescription());
+            }
+        }
+
+        payment = paymentRepository.save(payment);
+        order = orderRepository.save(order);
+
+        return paymentMapper.toResponse(payment);
+    }
+
+
+}

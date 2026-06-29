@@ -17,8 +17,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
-public class SettlementPaymentId implements Serializable{
+public class SettlementPaymentId{
 
     @Column(name = "settlement_id", nullable = false)
     private UUID settlementId;
