@@ -8,7 +8,7 @@ public enum PaymentStatus {
     CAPTURING,
     CAPTURED,
     FAILED,
-    CANCELLING,
+    CANCELLED,
     REFUNDING,
     PARTIAL_REFUNDING,
     SETTLED,
