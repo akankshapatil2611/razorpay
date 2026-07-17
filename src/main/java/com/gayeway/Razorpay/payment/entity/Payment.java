@@ -36,8 +36,8 @@ public class Payment extends BaseEntity {
     @Embedded
     private Money money;
 
-    @Column(nullable = false)
-    private UUID merchant_id;
+    @Column(name = "merchant_id", nullable = false)
+    private UUID merchantId;
 
     @Column(nullable = false, length = 100)
     private String idempotencyKey;

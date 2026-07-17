@@ -29,7 +29,7 @@ public class BankCallbackSimulator {
     public void processCallbacks(){
 
         LocalDateTime globalTime = LocalDateTime.now().minusSeconds(1);
-        List<Payment> candidates = paymentRepository.findByStatusAndCreatedBefore(PaymentStatus.AUTHORIZING, globalTime);
+        List<Payment> candidates = paymentRepository.findByStatusAndCreatedAtBefore(PaymentStatus.AUTHORIZING, globalTime);
 
         for(Payment payment : candidates){
             simulateCallback(payment);

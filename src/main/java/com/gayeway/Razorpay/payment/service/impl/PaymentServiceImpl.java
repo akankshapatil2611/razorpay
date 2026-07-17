@@ -56,7 +56,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = Payment.builder()
                 .order(order)
-                .merchant_id(merchantId)
+                .merchantId(merchantId)
                 .money(order.getAmount())
                 .status(PaymentStatus.CREATED)
                 .method(request.paymentMethod())

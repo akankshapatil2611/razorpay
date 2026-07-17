@@ -50,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
-                merchantContext.setMerchantId(UUID.fromString(jwtUtil.extractMerchantId(claims)));
+                merchantContext.setMerchantId(UUID.fromString(jwtUtil.extractMerchantId(claims)));   // Instead of every controller parsing JWT claims or API key entities, the auth filters write once into MerchantContext, and controllers read from it:
             }
             filterChain.doFilter(request,response);
         }
