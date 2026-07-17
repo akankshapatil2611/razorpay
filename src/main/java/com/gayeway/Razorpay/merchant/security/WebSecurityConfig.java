@@ -17,7 +17,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
-    public static final String[] JWT_ROUTES = {"/v1/auth/**", "/v1/merchant/**", "/v1/admin/**", "/actuator/**"};
+    public static final String[] PUBLIC_ROUTES = {"/v1/auth/**", "/v1/admin/**", "/actuator/**"};
+    public static final String[] JWT_ROUTES = {"/v1/merchants/**", "/v1/payments/**", "/v1/orders/**"};
     public static final String[] API_KEY_ROUTES = {"/v1/orders/**", "/v1/payments/**", "/v1/vault/**"};
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -30,7 +31,8 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(JWT_ROUTES).permitAll()
+                        .requestMatchers(PUBLIC_ROUTES).permitAll()
+                        .requestMatchers(JWT_ROUTES).authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

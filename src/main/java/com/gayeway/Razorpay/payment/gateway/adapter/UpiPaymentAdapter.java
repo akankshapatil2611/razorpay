@@ -22,7 +22,7 @@ public class UpiPaymentAdapter implements PaymentAdapter {
     @Override
     public PaymentResult initiate(PaymentRequest paymentRequest) {
 
-        log.info("Initiate Payment with NetbankingAdapter, payment : {}", paymentRequest.paymentId());
+        log.info("Initiate Payment with UpiPaymentAdapter, payment : {}", paymentRequest.paymentId());
 
         try {
             PaymentProcessorRequest paymentProcessorRequest = PaymentProcessorRequest.noncard(
@@ -48,8 +48,8 @@ public class UpiPaymentAdapter implements PaymentAdapter {
 
         }
         catch(Exception e) {
-            log.warn("NetBanking failed, paymentId: {}", paymentRequest.paymentId());
-            return new PaymentResult.Failure("NBK_FAILED", e.getMessage());
+            log.warn("UPI payment failed, paymentId: {}", paymentRequest.paymentId(), e);
+            return new PaymentResult.Failure("UPI_FAILED", e.getMessage());
         }
 
     }

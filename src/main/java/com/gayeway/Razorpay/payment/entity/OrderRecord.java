@@ -38,10 +38,12 @@ public class OrderRecord extends BaseEntity {
     @Column(length = 100)
     private String receipt;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private OrderStatus orderstatus = OrderStatus.CREATED;
 
+    @Builder.Default
     @Column(nullable = false)
     private Integer attempts = 0;
 
