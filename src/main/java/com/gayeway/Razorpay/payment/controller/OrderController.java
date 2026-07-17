@@ -1,5 +1,6 @@
 package com.gayeway.Razorpay.payment.controller;
 
+import com.gayeway.Razorpay.merchant.security.MerchantContext;
 import com.gayeway.Razorpay.payment.dto.request.CreateOrderRequest;
 import com.gayeway.Razorpay.payment.dto.response.OrderResponse;
 import com.gayeway.Razorpay.payment.service.OrderService;
@@ -18,12 +19,12 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    UUID merchantId =UUID.fromString("1a426fb7-4287-4f96-97aa-fd85fd3b5659");
+    private final MerchantContext merchantContext;
 
     @PostMapping
     public ResponseEntity<OrderResponse> create(@RequestBody @Valid CreateOrderRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(orderService.create(merchantId, request));
+                .body(orderService.create(merchantContext.getMerchantId(), request));
     }
 
 }
