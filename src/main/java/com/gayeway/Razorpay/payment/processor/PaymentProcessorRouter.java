@@ -3,9 +3,11 @@ package com.gayeway.Razorpay.payment.processor;
 import com.gayeway.Razorpay.common.enums.PaymentMethod;
 import com.gayeway.Razorpay.payment.processor.dto.PaymentProcessorRequest;
 import com.gayeway.Razorpay.payment.processor.dto.PaymentProcessorResponse;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+@Component
 public class PaymentProcessorRouter {
 
     private Map<PaymentMethod, PaymentProcessor> paymentProcessors;
