@@ -1,35 +1,79 @@
 # Razorpay Payment Gateway — Backend
 
-A Spring Boot–based payment gateway inspired by Razorpay. It supports merchant onboarding, server-to-server API access, order and payment lifecycle management, card tokenization, and simulated bank callbacks for local development.
+A Spring Boot–based payment gateway inspired by Razorpay — merchant onboarding, server-to-server payments, card vault, and bank simulation.
 
-> **Status:** Work in progress — core payment flows are implemented; settlement, webhooks, and refunds are modeled but not yet exposed as APIs.
+> **Status:** Core payment flows are live. Settlement, webhooks, and refunds are modeled but not yet exposed as APIs.
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Runtime | Java 21 |
-| Framework | Spring Boot 4.0.6 |
-| Database | MySQL |
-| ORM | Spring Data JPA (Hibernate) |
-| Security | Spring Security + JWT + API Key (Basic Auth) |
-| Mapping | MapStruct |
-| Build | Maven |
+```mermaid
+mindmap
+  root((Razorpay Backend))
+    Runtime
+      Java
+    Framework
+      Spring Boot
+      Spring Security
+      Spring Data JPA
+    Database
+      MySQL 
+      Hibernate
+    Tools
+      MapStruct
+      Lombok
+      Maven
+    Auth
+      JWT
+      API Key Basic Auth
+```
 
 ---
 
 ## Project Structure
 
-```
-src/main/java/com/gayeway/Razorpay/
-├── common/          # Shared enums, entities, exceptions, utilities
-├── merchant/        # Signup, login, JWT auth, API key management
-├── payment/         # Orders, payments, gateway adapters, state machine
-├── vault/           # Card tokenization & encrypted PAN storage
-├── operations/      # Settlement, webhooks, DLQ (entities designed)
-└── RazorpayApplication.java
+```mermaid
+flowchart LR
+    subgraph Root["com.gayeway.Razorpay"]
+        App["RazorpayApplication"]
+
+        subgraph common["common"]
+            C1["enums"]
+            C2["entities"]
+            C3["exceptions"]
+            C4["utilities"]
+        end
+
+        subgraph merchant["merchant"]
+            M1["controller"]
+            M2["service"]
+            M3["security"]
+            M4["entity / dto"]
+        end
+
+        subgraph payment["payment"]
+            P1["controller"]
+            P2["service"]
+            P3["gateway adapters"]
+            P4["state machine"]
+            P5["simulator"]
+        end
+
+        subgraph vault["vault"]
+            V1["controller"]
+            V2["encryption"]
+            V3["tokenize"]
+        end
+
+        subgraph operations["operations"]
+            O1["settlement"]
+            O2["webhooks"]
+            O3["DLQ"]
+        end
+    end
+
+    App --> common & merchant & payment & vault & operations
 ```
 
 ---
@@ -65,7 +109,7 @@ flowchart TB
         StateMachine["PaymentStateMachine"]
     end
 
-    subgraph Gateway["Payment Gateway (Strategy Pattern)"]
+    subgraph Gateway["Payment Gateway — Strategy Pattern"]
         Router["PaymentGatewayRouter"]
         Card["CardPaymentAdapter"]
         UPI["UpiPaymentAdapter"]
@@ -98,53 +142,124 @@ flowchart TB
 
 ---
 
+## Authentication Flow
+
+```mermaid
+flowchart TD
+    subgraph JWT["Dashboard Auth — JWT Bearer"]
+        A1["POST /v1/auth/signup"] --> A2["POST /v1/auth/login"]
+        A2 --> A3["Receive JWT token"]
+        A3 --> A4["POST /v1/merchants/api-keys"]
+        A4 --> A5["Create / List / Revoke / Rotate keys"]
+    end
+
+    subgraph APIKEY["Server Auth — API Key Basic"]
+        B1["Authorization: Basic base64(keyId:secret)"]
+        B1 --> B2["POST /v1/orders"]
+        B1 --> B3["POST /v1/payments"]
+        B1 --> B4["POST /v1/vault/tokenize"]
+    end
+
+    A5 -.->|"use generated key"| B1
+
+    style JWT fill:#e8f4fd,stroke:#2196F3
+    style APIKEY fill:#e8f5e9,stroke:#4CAF50
+```
+
+---
+
+## API Surface
+
+```mermaid
+flowchart LR
+    subgraph Public["Public — No Auth"]
+        S1["POST /v1/auth/signup"]
+        S2["POST /v1/auth/login"]
+    end
+
+    subgraph JWTRoutes["JWT Protected"]
+        K1["POST /v1/merchants/api-keys"]
+        K2["GET  /v1/merchants/api-keys"]
+        K3["DELETE /v1/merchants/api-keys/{keyId}"]
+        K4["POST /v1/merchants/api-keys/{keyId}/rotate"]
+    end
+
+    subgraph KeyRoutes["API Key Protected"]
+        O1["POST /v1/orders"]
+        P1["POST /v1/payments"]
+        P2["POST /v1/payments/{id}/capture"]
+        V1["POST /v1/vault/tokenize"]
+    end
+
+    Public --> JWTRoutes
+    JWTRoutes --> KeyRoutes
+```
+
+Base URL: `http://localhost:9090`
+
+---
+
 ## End-to-End Payment Flow
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant M as Merchant App
     participant API as Payment API
     participant GW as Gateway Adapter
     participant SM as State Machine
     participant Bank as Bank Simulator
 
-    Note over M: Step 1 — Dashboard auth (JWT)
-    M->>API: POST /v1/auth/signup
-    M->>API: POST /v1/auth/login
-    M->>API: POST /v1/merchants/api-keys
-
-    Note over M: Step 2 — Server-to-server (API Key)
-    M->>API: POST /v1/orders
-    API-->>M: orderId
-
-    opt Card payment
-        M->>API: POST /v1/vault/tokenize
-        API-->>M: cardToken
+    rect rgb(232, 244, 253)
+        Note over M,API: Phase 1 — Onboard & get API key (JWT)
+        M->>API: POST /v1/auth/signup
+        M->>API: POST /v1/auth/login
+        M->>API: POST /v1/merchants/api-keys
     end
 
-    M->>API: POST /v1/payments
-    API->>SM: AUTHORIZE_ATTEMPT
-    API->>GW: initiate(payment)
-    GW-->>API: Pending / Success / Failure
-    API-->>M: paymentId + status
+    rect rgb(232, 245, 233)
+        Note over M,API: Phase 2 — Create order (API Key)
+        M->>API: POST /v1/orders
+        API-->>M: orderId
+    end
 
-    Bank->>API: async callback (simulator)
-    API->>SM: AUTHORIZE_SUCCESS / FAIL
+    rect rgb(255, 243, 224)
+        Note over M,API: Phase 3 — Pay (optional card tokenize)
+        opt Card payment
+            M->>API: POST /v1/vault/tokenize
+            API-->>M: cardToken
+        end
+        M->>API: POST /v1/payments
+        API->>SM: AUTHORIZE_ATTEMPT
+        API->>GW: initiate(payment)
+        GW-->>API: Pending / Success / Failure
+        API-->>M: paymentId + status
+    end
 
-    M->>API: POST /v1/payments/{id}/capture
-    API->>SM: CAPTURE_REQUEST → CAPTURE_SUCCESS
-    API-->>M: CAPTURED
+    rect rgb(252, 228, 236)
+        Note over Bank,API: Phase 4 — Async bank callback
+        Bank->>API: simulate callback
+        API->>SM: AUTHORIZE_SUCCESS / FAIL
+    end
+
+    rect rgb(237, 231, 246)
+        Note over M,API: Phase 5 — Capture funds
+        M->>API: POST /v1/payments/{id}/capture
+        API->>SM: CAPTURE_REQUEST → CAPTURE_SUCCESS
+        API-->>M: CAPTURED
+    end
 ```
 
 ---
 
 ## Payment State Machine
 
-Payments follow a strict state machine. Invalid transitions throw `InvalidStateTransitionException`.
-
 ```mermaid
 stateDiagram-v2
+    direction LR
+
     [*] --> CREATED
+
     CREATED --> AUTHORIZED: AUTHORIZE_ATTEMPT
     CREATED --> CANCELLED: CANCEL
 
@@ -164,192 +279,114 @@ stateDiagram-v2
 
     SETTLED --> PARTIAL_REFUNDING: REFUND_INIT
     PARTIAL_REFUNDING --> REFUNDING: REFUND_COMPLETE
+
+    note right of CREATED
+        All transitions logged
+        in payment_transition_log
+    end note
 ```
 
-Every transition is logged in `payment_transition_log` for auditability.
+---
+
+## Payment Method Routing
+
+```mermaid
+flowchart TD
+    Request["POST /v1/payments"] --> Router["PaymentGatewayRouter"]
+
+    Router --> CARD["CardPaymentAdapter"]
+    Router --> UPI["UpiPaymentAdapter"]
+    Router --> NB["NetBankingAdapter"]
+    Router -.-> WALLET["Wallet — pending"]
+
+    CARD --> Vault["VaultService<br/>tokenized PAN"]
+    CARD --> Proc1["CardPaymentProcessor"]
+    UPI --> Proc2["UpiPaymentProcessor"]
+    NB --> Proc3["NetBankingPaymentProcessor"]
+
+    Proc1 & Proc2 & Proc3 --> Sim["BankCallbackSimulator"]
+    Sim --> SM["PaymentStateMachine"]
+
+    style WALLET fill:#f5f5f5,stroke:#999,stroke-dasharray: 5 5
+```
 
 ---
 
-## Authentication
+## Implementation Progress
 
-Two security filter chains protect different route groups:
-
-| Route group | Auth method | Endpoints |
-|-------------|-------------|-----------|
-| Dashboard / admin | JWT Bearer token | `/v1/auth/**`, `/v1/merchants/**` |
-| Server-to-server | API Key (HTTP Basic) | `/v1/orders/**`, `/v1/payments/**`, `/v1/vault/**` |
-
-**JWT flow** — signup and login are public; all other merchant routes require a valid token.
-
-**API Key flow** — send `Authorization: Basic base64(keyId:secret)` on order, payment, and vault requests.
-
----
-
-## API Reference
-
-Base URL: `http://localhost:9090`
-
-### Auth (public)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/v1/auth/signup` | Register a new merchant |
-| `POST` | `/v1/auth/login` | Login and receive JWT |
-
-### API Keys (JWT required)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/v1/merchants/api-keys` | Create a new API key |
-| `GET` | `/v1/merchants/api-keys` | List keys for the merchant |
-| `DELETE` | `/v1/merchants/api-keys/{keyId}` | Revoke a key |
-| `POST` | `/v1/merchants/api-keys/{keyId}/rotate` | Rotate a key |
-
-### Orders (API Key required)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/v1/orders` | Create a payment order |
-
-### Payments (API Key required)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/v1/payments` | Initiate a payment |
-| `POST` | `/v1/payments/{paymentId}/capture` | Capture an authorized payment |
-
-### Vault (API Key required)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/v1/vault/tokenize` | Tokenize a card (PAN encrypted at rest) |
+```mermaid
+timeline
+    title Build Phases
+    section Foundation
+        Entity design : Merchant, Order, Payment, Refund
+        Global exceptions : Structured error responses
+        DB indexes : High-traffic columns
+    section Merchant & Auth
+        Signup & Login : JWT for AppUser
+        Dual security chains : JWT + API Key filters
+        API key CRUD : Create, list, revoke, rotate
+    section Orders & Payments
+        Order API : Expiry & amount validation
+        Payment initiate & capture : Full lifecycle
+        Gateway strategy : Router + adapters
+        State machine : Transition audit log
+    section Vault & Cards
+        Card tokenization : DEK/KEK encryption
+        Card adapter : Vault-integrated payments
+    section Simulation
+        Bank simulator : Delays, success rates, chaos modes
+    section Upcoming
+        Refunds : Entity ready
+        Settlements : Entity ready
+        Webhooks & DLQ : Entity ready
+        Wallet adapter : Enum only
+```
 
 ---
 
-## Supported Payment Methods
+## Planned Work
 
-| Method | Gateway Adapter | Processor |
-|--------|-----------------|-----------|
-| Card | `CardPaymentAdapter` | Card processor with vault token support |
-| UPI | `UpiPaymentAdapter` | UPI processor |
-| Net Banking | `NetBankingAdapter` | Net banking processor |
-| Wallet | — | Enum defined; adapter pending |
+```mermaid
+flowchart LR
+    Done["Implemented<br/>Auth · Orders · Payments<br/>Vault · Simulator"]
 
----
+    Done --> R1["Refund APIs"]
+    Done --> R2["Settlement batches"]
+    Done --> R3["Webhook delivery + DLQ retry"]
+    Done --> R4["Wallet adapter"]
+    Done --> R5["Admin APIs /v1/admin"]
+    Done --> R6["Enable @Scheduled simulator"]
 
-## What's Implemented
-
-### Phase 1 — Foundation
-- [x] Domain entity design (Merchant, Order, Payment, Refund, Settlement, Webhook, DLQ)
-- [x] Shared `BaseEntity` with auditing
-- [x] Global exception handling with structured error responses
-- [x] Database indexes on high-traffic columns
-
-### Phase 2 — Merchant & Auth
-- [x] Merchant signup API
-- [x] JWT-based login for dashboard users (`AppUser`)
-- [x] Dual security filter chains (JWT + API Key)
-- [x] API key generation, listing, revocation, and rotation
-
-### Phase 3 — Orders & Payments
-- [x] Create order API with expiry and amount validation
-- [x] Initiate payment API (links payment to order)
-- [x] Capture payment API
-- [x] Payment gateway router with strategy pattern
-- [x] Payment state machine with transition audit log
-- [x] MapStruct DTO mapping
-
-### Phase 4 — Vault & Card Payments
-- [x] Card tokenization with DEK/KEK-style encryption
-- [x] Card brand detection and expiry validation
-- [x] Card payment adapter integrated with vault tokens
-
-### Phase 5 — Simulation
-- [x] Bank callback simulator with configurable delays and success rates
-- [x] Chaos modes: `NORMAL`, `SUCCESS`, `FAILURE`, `TIMEOUT`, `SLOW`
-
----
-
-## Planned / In Progress
-
-- [ ] Refund APIs (entity + state transitions exist)
-- [ ] Settlement batch processing
-- [ ] Merchant webhook delivery & retry (DLQ entity ready)
-- [ ] Wallet payment adapter
-- [ ] Admin APIs (`/v1/admin/**` route reserved)
-- [ ] Enable scheduled bank simulator (`@Scheduled` currently commented out)
+    style Done fill:#c8e6c9,stroke:#4CAF50
+    style R1 fill:#fff9c4,stroke:#FBC02D
+    style R2 fill:#fff9c4,stroke:#FBC02D
+    style R3 fill:#fff9c4,stroke:#FBC02D
+    style R4 fill:#fff9c4,stroke:#FBC02D
+    style R5 fill:#fff9c4,stroke:#FBC02D
+    style R6 fill:#fff9c4,stroke:#FBC02D
+```
 
 ---
 
 ## Getting Started
 
-### Prerequisites
+```mermaid
+flowchart TD
+    Start([Start]) --> P1["Install Java 21 + Maven + MySQL 8"]
+    P1 --> P2["CREATE DATABASE razorpayDB"]
+    P2 --> P3["Configure application.yaml credentials"]
+    P3 --> P4["./mvnw spring-boot:run"]
+    P4 --> P5["Server running on port 9090"]
+    P5 --> P6["Signup → Login → Create API Key → Create Order → Pay"]
 
-- Java 21+
-- Maven 3.9+
-- MySQL 8+
-
-### Database Setup
-
-```sql
-CREATE DATABASE razorpayDB;
+    style Start fill:#e3f2fd,stroke:#1976D2
+    style P5 fill:#c8e6c9,stroke:#4CAF50
 ```
-
-Update credentials in `src/main/resources/application.yaml` if needed:
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/razorpayDB
-    username: root
-    password: root
-```
-
-### Run the Application
 
 ```bash
+# Quick start
 ./mvnw spring-boot:run
-```
 
-The server starts on **port 9090**.
-
-### Build
-
-```bash
+# Build
 ./mvnw clean package
 ```
-
----
-
-## Configuration Highlights
-
-| Property | Default | Description |
-|----------|---------|-------------|
-| `server.port` | `9090` | HTTP port |
-| `payment.order.default-order-expiry-minutes` | `30` | Order TTL |
-| `payment.simulator.chaos-mode` | `NORMAL` | Simulator behavior |
-| `payment.simulator.methods.*.success-rate` | varies | Per-method success % |
-| `vault.masterkey` | — | Master encryption key (use env var in prod) |
-| `jwt.secret-key` | — | JWT signing secret (use env var in prod) |
-
----
-
-## Development Timeline
-
-| Commit | Milestone |
-|--------|-----------|
-| Entity design | Core domain model |
-| Merchant signup + global exceptions | First APIs |
-| Order & merchant APIs + MapStruct | Payment order flow |
-| Payment controller + gateway strategy | Payment initiation |
-| State machine + capture + UPI/NetBanking | Full authorize/capture cycle |
-| Vault service + card payments | PCI-friendly tokenization |
-| Bank simulator | Async callback testing |
-| JWT auth + merchant signup | Dashboard authentication |
-| API key generation | Server-to-server integration |
-
----
-
-## License
-
-This project is for educational and portfolio purposes.
