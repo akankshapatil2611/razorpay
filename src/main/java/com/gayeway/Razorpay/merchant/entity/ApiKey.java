@@ -38,7 +38,7 @@ public class ApiKey extends BaseEntity {
     private String previousKeySecretHash;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
+    @Column(nullable = false, columnDefinition = "varchar(10)")
     private Environment environment;
 
     @Column(nullable = false)

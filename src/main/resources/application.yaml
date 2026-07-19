@@ -6,9 +6,9 @@ spring:
     name: Razorpay
 
   datasource:
-    url: jdbc:mysql://localhost:3306/razorpayDB
-    username: root
-    password: root
+    url: jdbc:mysql://{DB_HOST:DB_PORT}/razorpayDB
+    username: { Username }
+    password: { Password }
 
   jpa:
     hibernate:
@@ -37,9 +37,9 @@ payment:
         success-rate: 80
 
 vault:
-  masterkey: kfhjhjhj55k4bjhgb334hkkjkdadsdagssdzxvcvzfsaawerewtghhh
+  masterkey: { masterkey }
 
 jwt:
-  secret-key: dsfhjlsdfheriuerjxhckj38lkzjhfdak0jlskjdlajdkjasqwe23jkhkjhkhj
+  secret-key: { secretKay }
 
 
