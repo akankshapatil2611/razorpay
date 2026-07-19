@@ -31,53 +31,6 @@ mindmap
 
 ---
 
-## Project Structure
-
-```mermaid
-flowchart LR
-    subgraph Root["com.gayeway.Razorpay"]
-        App["RazorpayApplication"]
-
-        subgraph common["common"]
-            C1["enums"]
-            C2["entities"]
-            C3["exceptions"]
-            C4["utilities"]
-        end
-
-        subgraph merchant["merchant"]
-            M1["controller"]
-            M2["service"]
-            M3["security"]
-            M4["entity / dto"]
-        end
-
-        subgraph payment["payment"]
-            P1["controller"]
-            P2["service"]
-            P3["gateway adapters"]
-            P4["state machine"]
-            P5["simulator"]
-        end
-
-        subgraph vault["vault"]
-            V1["controller"]
-            V2["encryption"]
-            V3["tokenize"]
-        end
-
-        subgraph operations["operations"]
-            O1["settlement"]
-            O2["webhooks"]
-            O3["DLQ"]
-        end
-    end
-
-    App --> common & merchant & payment & vault & operations
-```
-
----
-
 ## Architecture Overview
 
 ```mermaid
@@ -167,33 +120,6 @@ flowchart TD
 ```
 
 ---
-
-## API Surface
-
-```mermaid
-flowchart LR
-    subgraph Public["Public — No Auth"]
-        S1["POST /v1/auth/signup"]
-        S2["POST /v1/auth/login"]
-    end
-
-    subgraph JWTRoutes["JWT Protected"]
-        K1["POST /v1/merchants/api-keys"]
-        K2["GET  /v1/merchants/api-keys"]
-        K3["DELETE /v1/merchants/api-keys/{keyId}"]
-        K4["POST /v1/merchants/api-keys/{keyId}/rotate"]
-    end
-
-    subgraph KeyRoutes["API Key Protected"]
-        O1["POST /v1/orders"]
-        P1["POST /v1/payments"]
-        P2["POST /v1/payments/{id}/capture"]
-        V1["POST /v1/vault/tokenize"]
-    end
-
-    Public --> JWTRoutes
-    JWTRoutes --> KeyRoutes
-```
 
 Base URL: `http://localhost:9090`
 
@@ -309,63 +235,6 @@ flowchart TD
 
     style WALLET fill:#f5f5f5,stroke:#999,stroke-dasharray: 5 5
 ```
-
----
-
-## Implementation Progress
-
-```mermaid
-timeline
-    title Build Phases
-    section Foundation
-        Entity design : Merchant, Order, Payment, Refund
-        Global exceptions : Structured error responses
-        DB indexes : High-traffic columns
-    section Merchant & Auth
-        Signup & Login : JWT for AppUser
-        Dual security chains : JWT + API Key filters
-        API key CRUD : Create, list, revoke, rotate
-    section Orders & Payments
-        Order API : Expiry & amount validation
-        Payment initiate & capture : Full lifecycle
-        Gateway strategy : Router + adapters
-        State machine : Transition audit log
-    section Vault & Cards
-        Card tokenization : DEK/KEK encryption
-        Card adapter : Vault-integrated payments
-    section Simulation
-        Bank simulator : Delays, success rates, chaos modes
-    section Upcoming
-        Refunds : Entity ready
-        Settlements : Entity ready
-        Webhooks & DLQ : Entity ready
-        Wallet adapter : Enum only
-```
-
----
-
-## Planned Work
-
-```mermaid
-flowchart LR
-    Done["Implemented<br/>Auth · Orders · Payments<br/>Vault · Simulator"]
-
-    Done --> R1["Refund APIs"]
-    Done --> R2["Settlement batches"]
-    Done --> R3["Webhook delivery + DLQ retry"]
-    Done --> R4["Wallet adapter"]
-    Done --> R5["Admin APIs /v1/admin"]
-    Done --> R6["Enable @Scheduled simulator"]
-
-    style Done fill:#c8e6c9,stroke:#4CAF50
-    style R1 fill:#fff9c4,stroke:#FBC02D
-    style R2 fill:#fff9c4,stroke:#FBC02D
-    style R3 fill:#fff9c4,stroke:#FBC02D
-    style R4 fill:#fff9c4,stroke:#FBC02D
-    style R5 fill:#fff9c4,stroke:#FBC02D
-    style R6 fill:#fff9c4,stroke:#FBC02D
-```
-
 ---
 
 ## Getting Started
