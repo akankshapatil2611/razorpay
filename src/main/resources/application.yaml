@@ -10,10 +10,18 @@ spring:
     username: { Username }
     password: { Password }
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+
 
 payment:
   order:
@@ -37,9 +45,9 @@ payment:
         success-rate: 80
 
 vault:
-  masterkey: { masterkey }
+  masterkey: kfhjhjhj55k4bjhgb334hkkjkdadsdagssdzxvcvzfsaawerewtghhh
 
 jwt:
-  secret-key: { secretKay }
+  secret-key: dsfhjlsdfheriuerjxhckj38lkzjhfdak0jlskjdlajdkjasqwe23jkhkjhkhj
 
 
