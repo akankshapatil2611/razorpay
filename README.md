@@ -333,12 +333,6 @@ stateDiagram-v2
 - [x] Payment state machine + transition audit
 - [x] Card vault tokenization
 - [x] Bank callback simulator
-- [ ] Refund APIs
-- [ ] Settlement batch processing
-- [ ] Webhook delivery & DLQ retry
-- [ ] Wallet payment adapter
-- [ ] Admin APIs (`/v1/admin/**`)
-
 ---
 
 ## Security Notes
